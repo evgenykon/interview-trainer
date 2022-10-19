@@ -34,8 +34,8 @@
                     <div class="field">
                         <label class="label">Controls</label>
                         <div class="control">
-                            <button class="button is-primary" v-on:click="onClickStart()">Start</button>
-                            <button class="button is-outlined">Pause</button>
+                            <button class="button is-primary" v-bind:disabled="isReading" v-on:click="onClickStart()">Start</button>
+                            <button class="button is-outlined" v-bind:disabled="!isReading">Pause</button>
                             <button class="button is-danger is-outlined">Abort</button>
                         </div>
                     </div>
@@ -63,7 +63,8 @@ export default {
         return {
             status: [],
             voice: null,
-            speed: 1
+            speed: 1,
+            isReading: false,
         }
 
     },
@@ -77,11 +78,28 @@ export default {
     },
     methods: {
         async onClickStart() {
+            this.$emit('started');
+        },
+        onEnd() {
+            console.log('text-readed', this);
+            this.$emit('text-readed');
+            this.isReading = false;
+        }
+    },
+    watch: {
+        async text(val) {
+            if (!val) {
+                return;
+            }
+            if (this.isReading) {
+                return;
+            }
+            this.isReading = true;
             await EasySpeech.speak({
-                text: this.text,
+                text: val,
                 voice: this.voice,
                 rate: this.speed,
-                boundary: e => console.debug('boundary reached')
+                end: this.onEnd
             })
         }
     }
