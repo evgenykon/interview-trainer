@@ -188,7 +188,7 @@ export default {
             }
         },
         async loadDemoInterview() {
-            const data = await fetch('/demo/demo1.json');
+            const data = await fetch('./demo/demo1.json');
             this.interview = await data.json();
         }
     },

@@ -43,8 +43,8 @@
                         <label class="label">Controls</label>
                         <div class="control">
                             <button class="button is-primary" v-bind:disabled="isReading" v-on:click="onClickStart()">Start</button>
-                            <button class="button is-outlined ml-1" v-bind:disabled="!isReading">Pause</button>
-                            <button class="button is-danger is-outlined ml-1" v-bind:disabled="!isStarted">Abort</button>
+                            <!-- button class="button is-outlined ml-1" v-bind:disabled="!isReading">Pause</button>
+                            <button class="button is-danger is-outlined ml-1" v-bind:disabled="!isStarted">Abort</button -->
                         </div>
                     </div>
 
