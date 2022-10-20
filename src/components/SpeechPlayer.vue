@@ -20,11 +20,11 @@
                         <div class="control">
                             <div class="select">
                             <select v-model="speed">
+                                <option v-bind:value="0.5">0.5</option>
                                 <option v-bind:value="1">1</option>
-                                <option v-bind:value="2">2</option>
                                 <option v-bind:value="3">3</option>
-                                <option v-bind:value="4">4</option>
                                 <option v-bind:value="5">5</option>
+                                <option v-bind:value="10">10</option>
                             </select>
                             </div>
                         </div>
@@ -35,8 +35,8 @@
                         <label class="label">Controls</label>
                         <div class="control">
                             <button class="button is-primary" v-bind:disabled="isReading" v-on:click="onClickStart()">Start</button>
-                            <button class="button is-outlined" v-bind:disabled="!isReading">Pause</button>
-                            <button class="button is-danger is-outlined">Abort</button>
+                            <button class="button is-outlined ml-1" v-bind:disabled="!isReading">Pause</button>
+                            <button class="button is-danger is-outlined ml-1" v-bind:disabled="!isStarted">Abort</button>
                         </div>
                     </div>
 
@@ -50,13 +50,18 @@
 
 <script>
 
-import EasySpeech from 'easy-speech'
+import EasySpeech from 'easy-speech';
+import { get, set } from 'idb-keyval';
 
 export default {
     name: 'SpeechPlayer',
     props: {
         text: {
             type: String
+        },
+        isStarted: {
+            type: Boolean,
+            default: false
         }
     },
     data() {
@@ -69,21 +74,49 @@ export default {
 
     },
 	async mounted() {
-        console.log('x mounted', EasySpeech.detect());
-        await EasySpeech.init({ maxTimeout: 5000, interval: 250 })
-            .then(() => console.debug('load complete'))
-            .catch(e => console.error(e))
+        await EasySpeech.init({ maxTimeout: 5000, interval: 250 });
         this.status = await EasySpeech.status()
         this.voice = this.status.voices[0];
+        await this.loadLastVoiceParams();
     },
     methods: {
         async onClickStart() {
             this.$emit('started');
+            this.storeVoiceParams();
         },
         onEnd() {
             console.log('text-readed', this);
             this.$emit('text-readed');
             this.isReading = false;
+        },
+        async storeVoiceParams() {
+            try {
+                await set('voice-params', JSON.stringify({
+                    voice: this.voice.voiceURI,
+                    speed: this.speed
+                }));
+            } catch (e) {
+                console.error('Fail to store voice params', e);
+            }
+        },
+        async loadLastVoiceParams() {
+            try {
+                const data = await get('voice-params');
+                if (data) {
+                    const params = JSON.parse(data);
+                    this.speed = params.speed;
+                    const voices = await EasySpeech.status();
+                    for (let voice of voices.voices) {
+                        if (voice.voiceURI !== params.voice) {
+                            continue;
+                        }
+                        this.voice = voice;
+                        break;
+                    }
+                }
+            } catch (e) {
+                console.error('Fail to load voice params', e);
+            }
         }
     },
     watch: {

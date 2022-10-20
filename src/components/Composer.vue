@@ -29,6 +29,10 @@
                                 <button class="button is-link is-outlined" v-on:click="addQuestion()">
                                     New question
                                 </button>
+                                
+                                <button class="button is-primary is-outlined ml-1" v-on:click="storeLastTraining()">Save</button>
+
+                                <button class="button is-outlined ml-1" v-on:click="loadDemoInterview()">Demo</button>
                             </div>
                             <a class="panel-block is-active" v-for="(q,i) of interview" v-on:click="selectQuestion(q,i)">
                                 <span class="tag is-primary is-light" v-if="q.isStarting">start</span>&nbsp; 
@@ -44,7 +48,13 @@
 
         <h2 class="is-size-2 mb-2">Testing</h2>
 
-        <SpeechPlayer  client:visible v-bind:text="speechText" v-on:started="onInterviewStarted" v-on:text-readed="onTextReaded" />
+        <SpeechPlayer  
+            client:visible 
+            v-bind:text="speechText" 
+            v-bind:is-started="isStarted"
+            v-on:started="onInterviewStarted" 
+            v-on:text-readed="onTextReaded" 
+        />
     </div>
 
 
@@ -53,6 +63,8 @@
 <script>
 import QuestionVo from '../libs/vo/QuestionVo.js';
 import SpeechPlayer from './SpeechPlayer.vue';
+import { get, set } from 'idb-keyval';
+
 export default {
     name: 'Composer',
     components: {
@@ -67,6 +79,9 @@ export default {
             isStarted: false,
             readingIndex: null,
         }
+    },
+    mounted() {
+        this.loadLastTraining();
     },
     methods: {
         addQuestion() {
@@ -103,12 +118,14 @@ export default {
             if (this.interview.length < 1) {
                 return;
             }
+            this.isStarted = true;
             let sortedInterview = [];
             const firstQ = this.interview.filter(q => q.isStarting);
             const endQ = this.interview.filter(q => q.isEnding);
             const randQ = this.interview.filter(q => !q.isStarting && !q.isEnding).sort(() => Math.random() - 0.5);
             this.interview = [].concat(firstQ, randQ, endQ);
             this.readingIndex = 0;
+
         },
         onTextReaded() {
             console.log('onTextReaded');
@@ -116,7 +133,28 @@ export default {
                 this.readingIndex++;
             } else {
                 this.readingIndex = null;
+                this.isStarted = false;
             }
+        },
+        async loadLastTraining() {
+            try {
+                const training = await get('last-training');
+                if (training) {
+                    this.interview = JSON.parse(training);
+                }
+            } catch (e) {
+                console.log('No trainings stored');
+            }
+        },
+        async storeLastTraining() {
+            try {
+                await set('last-training', JSON.stringify(this.interview));
+            } catch (e) {
+                console.error('Fail to store training', e);
+            }
+        },
+        loadDemoInterview() {
+
         }
     },
     watch: {
