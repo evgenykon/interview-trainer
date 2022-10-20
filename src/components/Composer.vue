@@ -78,7 +78,7 @@
 import QuestionVo from '../libs/vo/QuestionVo.js';
 import SpeechPlayer from './SpeechPlayer.vue';
 import { get, set } from 'idb-keyval';
-import {mixin as VueTimers} from 'vue-timers';
+import VueTimers from 'vue-timers';
 
 export default {
     name: 'Composer',
