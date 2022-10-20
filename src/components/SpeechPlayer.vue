@@ -14,7 +14,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="column">
+                <div class="column  is-one-fifth">
                     <div class="field">
                         <label class="label">Speed</label>
                         <div class="control">
@@ -30,7 +30,15 @@
                         </div>
                     </div>
                 </div>
-                <div class="column">
+                <div class="column is-one-fifth">
+                    <div class="field" v-if="answerTimeoutPercent > 0">
+                        <label class="label">Answer timeout</label>
+                        <div class="control">
+                            <progress class="progress mt-4 is-danger" v-bind:value="answerTimeoutPercent" max="100">{{answerTimeoutPercent}}%</progress>
+                        </div>
+                    </div>
+                </div>
+                <div class="column is-flex is-justify-content-flex-end">
                     <div class="field">
                         <label class="label">Controls</label>
                         <div class="control">
@@ -62,6 +70,10 @@ export default {
         isStarted: {
             type: Boolean,
             default: false
+        },
+        answerTimeoutPercent: {
+            type: Number,
+            default: 0
         }
     },
     data() {
@@ -69,7 +81,7 @@ export default {
             status: [],
             voice: null,
             speed: 1,
-            isReading: false,
+            isReading: false
         }
 
     },

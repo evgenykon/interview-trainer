@@ -1,0 +1,5 @@
+[
+    {"text":"Hello! You are in the interview trainer! This is demo interview, and now please introduce yourself! What is your name? ","isStarting":true,"isEnding":false,"answerTimeout":"5"},
+    {"text":"Okey! Let me tell you about out company! So, there is mock interview, you no need to listen that, but in real interview it is good thing if you mark something and check later. And now, let look at your experience. Tell me about last job, and your best achievements. ","isStarting":false,"isEnding":false,"answerTimeout":"180"},
+    {"text":"Great! So, I have no more questions for you. I hope this trainer will help you to practice an active listening. Now you can edit this questions and add you own. Have a nice train!","isStarting":false,"isEnding":true,"answerTimeout":"5"}
+]

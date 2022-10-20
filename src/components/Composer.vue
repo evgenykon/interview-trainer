@@ -8,17 +8,30 @@
                 <div class="content columns">
                     <div class="column is-three-quarters">
                         <textarea v-if="question" class="textarea" rows="10" v-model="question.text"></textarea>
-                        <div class="control mt-1" v-if="question">
-                            <label class="radio">
-                                <input type="radio" name="position" value="starting" v-model="position" v-bind:disabled="hasStartQuestion">
-                                Starting question
-                            </label>
-                            <label class="radio">
-                                <input type="radio" name="position" value="ending" v-model="position" v-bind:disabled="hasEndQuestion">
-                                Finishing question
-                            </label>
+                        <div class="columns mt-1 mb-0" v-if="question">
+                            <div class="column">
+                                <div class="control">
+                                    <label class="radio">
+                                        <input type="radio" name="position" value="starting" v-model="position" v-bind:disabled="hasStartQuestion">
+                                        Starting question
+                                    </label>
+                                    <label class="radio">
+                                        <input type="radio" name="position" value="ending" v-model="position" v-bind:disabled="hasEndQuestion">
+                                        Finishing question
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="column">
+                                <div class="control">
+                                    <label class="radio pt-1 pr-1">
+                                        Answer time {{question.answerTimeout}} sec
+                                        <input class="mt-1" type="range" v-model="question.answerTimeout" min="5" max="180" style="height:10px;" /> 
+                                    </label>
+                                </div>
+                            </div>
                         </div>
-                        <div class="control mt-3" v-if="question">
+                        
+                        <div class="control mt-1" v-if="question">
                             <button class="button is-small is-primary is-rounded is-outlined" v-on:click="submitQuestion()">Submit</button>
                             <button class="button is-small is-danger is-rounded is-outlined" v-on:click="deleteQuestion()">Delete</button>
                         </div>
@@ -52,6 +65,7 @@
             client:visible 
             v-bind:text="speechText" 
             v-bind:is-started="isStarted"
+            v-bind:answer-timeout-percent="answerTimeoutPercent"
             v-on:started="onInterviewStarted" 
             v-on:text-readed="onTextReaded" 
         />
@@ -64,12 +78,14 @@
 import QuestionVo from '../libs/vo/QuestionVo.js';
 import SpeechPlayer from './SpeechPlayer.vue';
 import { get, set } from 'idb-keyval';
+import {mixin as VueTimers} from 'vue-timers';
 
 export default {
     name: 'Composer',
     components: {
         SpeechPlayer
     },
+    mixins: [VueTimers],
     data() {
         return {
             interview: [],
@@ -78,10 +94,15 @@ export default {
             questionIndex: null,
             isStarted: false,
             readingIndex: null,
+            answerTimeoutSecondsCounter: 0
         }
     },
     mounted() {
         this.loadLastTraining();
+    },
+    timers: {
+        answerTimeout: { time: 5000, autostart: false },
+        answerTimeoutCheckPercent: {time: 1000, repeat: true}
     },
     methods: {
         addQuestion() {
@@ -128,13 +149,25 @@ export default {
 
         },
         onTextReaded() {
-            console.log('onTextReaded');
+            if (this.readingIndex < this.interview.length - 1) {
+                this.timers.answerTimeout.time = this.interview[this.readingIndex].answerTimeout * 1000;
+            }
+            this.$timer.start('answerTimeout');
+            this.$timer.start('answerTimeoutCheckPercent');
+        },
+        answerTimeout() {
+            this.$timer.stop('answerTimeoutCheckPercent');
+            this.answerTimeoutSecondsCounter = 0;
             if (this.readingIndex < this.interview.length - 1) {
                 this.readingIndex++;
             } else {
                 this.readingIndex = null;
                 this.isStarted = false;
             }
+        },
+        answerTimeoutCheckPercent() {
+            console.log('answerTimeoutCheckPercent ++');
+            this.answerTimeoutSecondsCounter++;
         },
         async loadLastTraining() {
             try {
@@ -149,12 +182,14 @@ export default {
         async storeLastTraining() {
             try {
                 await set('last-training', JSON.stringify(this.interview));
+                console.log(JSON.stringify(this.interview));
             } catch (e) {
                 console.error('Fail to store training', e);
             }
         },
-        loadDemoInterview() {
-
+        async loadDemoInterview() {
+            const data = await fetch('/demo/demo1.json');
+            this.interview = await data.json();
         }
     },
     watch: {
@@ -180,7 +215,16 @@ export default {
         },
         hasEndQuestion() {
             return this.interview.filter(q => q.isEnding).length > 0;
+        },
+        answerTimeoutPercent() {
+            if (this.interview.length > 0 && this.readingIndex !== null && this.interview[this.readingIndex].answerTimeout > 0) {
+                return Math.ceil(this.answerTimeoutSecondsCounter * 100 / this.interview[this.readingIndex].answerTimeout);
+            } else {
+                return 0;
+            }
         }
     }
 };
 </script>
+
+<!-- style src="@vueform/slider/themes/default.css"></style -->
