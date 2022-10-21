@@ -69,6 +69,8 @@
             v-on:started="onInterviewStarted" 
             v-on:text-readed="onTextReaded" 
         />
+
+        <SpeechRecognition client:visible></SpeechRecognition>
     </div>
 
 
@@ -77,13 +79,14 @@
 <script>
 import QuestionVo from '../libs/vo/QuestionVo.js';
 import SpeechPlayer from './SpeechPlayer.vue';
+import SpeechRecognition from './SpeechRecognition.vue';
 import { get, set } from 'idb-keyval';
 import VueTimers from 'vue-timers';
 
 export default {
     name: 'Composer',
     components: {
-        SpeechPlayer
+        SpeechPlayer, SpeechRecognition
     },
     mixins: [VueTimers],
     data() {
