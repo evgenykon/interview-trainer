@@ -37,6 +37,7 @@ export default {
         this.sr.onerror = this.errorHandler;
         this.sr.onend = this.endHandler;
         this.sr.onresult = this.resultHandler;
+        this.sr.stop();
         console.log(this.sr);
     },
     methods: {
